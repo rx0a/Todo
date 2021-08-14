@@ -1,0 +1,245 @@
+## Labs
+
+We will be working on our `ngTodo` project for this lab.
+
+You will additionally be creating a Spring REST backend as a separate project. This from-scratch build will be a good review for the SQL, Java, and JPA topics.
+
+We will start by having you create a database to support a REST API for your todos.
+
+We will also create support for users (which we will use later), because it will be easier to do it now than update it later.
+
+### Java
+
+#### Part 1 : Create a workspace folder
+
+1. Create a folder:
+
+   ```bash
+   mkdir ~/SD/Java/TodoApp
+   ```
+
+#### Part 2 : Make the Todo Database
+
+1. Download the database schema script:
+
+   There is a `.sql` file for the schema provided [here](resources/tododb.sql).
+
+1. Move the script to your workspace folder:
+
+   ```bash
+   mv ~/Downloads/tododb.sql ~/SD/Java/TodoApp/
+   ```
+
+1. Run the script to load the database:
+
+   ```bash
+   cd ~/SD/Java/TodoApp/
+   mysql -u root -p < tododb.sql
+   ```
+
+1. This creates a `user` table as follows:
+
+   ```bash
+   +----------+--------------+------+-----+----------+----------------+
+   | Field    | Type         | Null | Key | Default  | Extra          |
+   +----------+--------------+------+-----+----------+----------------+
+   | id       | int(11)      | NO   | PRI | NULL     | auto_increment |
+   | email    | varchar(255) | NO   |     | NULL     |                |
+   | username | varchar(255) | NO   |     | NULL     |                |
+   | password | varchar(255) | NO   |     | NULL     |                |
+   | enabled  | tinyint(1)   | NO   |     | 1        |                |
+   | role     | varchar(20)  | YES  |     | standard |                |
+   +----------+--------------+------+-----+----------+----------------+
+   ```
+
+1. ... and a `todo` table as follows:
+
+   ```bash
+   +---------------+--------------+------+-----+---------------------+-----------------------------+
+   | Field         | Type         | Null | Key | Default             | Extra                       |
+   +---------------+--------------+------+-----+---------------------+-----------------------------+
+   | id            | int(11)      | NO   | PRI | NULL                | auto_increment              |
+   | task          | varchar(55)  | NO   |     | NULL                |                             |
+   | description   | text         | YES  |     |                     |                             |
+   | completed     | tinyint(1)   | YES  |     | 0                   |                             |
+   | user_id       | int(11)      | NO   | MUL | NULL                |                             |
+   | due_date      | varchar(50)  | YES  |     | NULL                |                             |
+   | complete_date | varchar(50)  | YES  |     | NULL                |                             |
+   | created_at    | timestamp    | NO   |     | 0000-00-00 00:00:00 |                             |
+   | updated_at    | timestamp    | NO   |     | 0000-00-00 00:00:00 | on update CURRENT_TIMESTAMP |
+   +---------------+--------------+------+-----+---------------------+-----------------------------+
+   ```
+
+1. Connection information:
+
+   * Connect URL: `jdbc:mysql://localhost:3306/tododb?useSSL=false&useLegacyDatetimeCode=false&serverTimezone=US/Mountain`
+   * Username: `todos`
+   * Password: `todos`
+
+#### Part 3 : Make a JPA Project
+
+1. Open the `TodoApp` workspace folder in STS.
+
+1. Create a new *Gradle Project*, `TodoJPA`, that will be used by the SpringBoot project for data when providing a REST API.
+
+1. Look back at the project we created during REST week as an example if you get stuck.
+
+1. Configure the `build.gradle` file with the dependencies needed for JPA and unit testing.
+
+1. Create `src/main/resources/META-INF/` and add a `persistence.xml` file in.
+
+#### Part 4 : Create the REST Project
+
+1. Create a new SpringBoot project.
+    * Name it `TodoRest`
+    * Make sure the base package is `com.skilldistillery.todoapp`
+    * Add Web, JPA, MySql dependencies
+
+1. Include your JPA Project as a dependency of your Boot project. Do this in your Gradle files.
+
+1. In your `application.properties` file configure your `datasource`, and choose a `server.port` number not currently used for your other applications.
+
+#### Part 5: Create, Annotate, and Test Entities
+
+1. In `TodoJPA` create a `com.skilldistillery.todoapp.entities` package.
+
+1. Create a `User` entity which maps the `user` table from MySQL.
+
+1. Create a `Todo` entity which maps the `todo` table from MySQL.
+
+1. Test that your configuration is working. Create at least one User and some Todos for that user in MySql.
+
+1. Add relationships between the two entities:
+    * A User **HAS MANY** todos
+    * A Todo **HAS ONE** user
+
+#### Part 6: Implement the REST API
+
+1. In `TodoREST` create packages for repositories, services, and controllers.
+
+   * `com.skilldistillery.todoapp.controllers`
+   * `com.skilldistillery.todoapp.repositories`
+   * `com.skilldistillery.todoapp.services`
+
+1. Create repositories for your User and Todo entities.
+
+1. Create the following service interface for your Todo entity and add an implementing class. The implementing class should autowire in the Todo and User repositories and be annotated with `@Service`.
+
+   Todos belong to a specific User, so use the unique username to manipulate the appropriate Todos.
+
+   ```java
+   public interface TodoService {
+       public Set<Todo> index(String username);
+
+       public Todo show(String username, int tid);
+
+       public Todo create(String username, Todo todo);
+
+       public Todo update(String username, int tid, Todo todo);
+
+       public boolean destroy(String username, int tid);
+   }
+   ```
+
+1. Create a `TodoController`, annotate the class with `@RestController`, `@RequestMapping(path="api")`, and autowire in your service.
+
+   Because Angular runs on a separate server (port 4200), Spring is going to reject any external requests to our controller. We can configure the app to accept all traffic from 4200 by annotating the controller class with `@CrossOrigin({"*", "http://localhost:4200"})`.
+
+   * If you served your `ngTodo` app on another port like `4201` or `4202`, change the annotation accordingly.
+
+   Todos are a sub resource of a User and will have a base url of `todos`. Our service requires a `username` string with each method call, which will eventually come from our login process.
+
+   Implement the following methods:
+
+   ```java
+   //    GET todos
+   public Set<Todo> index(HttpServletRequest req, HttpServletResponse res) { }
+
+   //    GET todos/{tid}
+   public Todo show(HttpServletRequest req, HttpServletResponse res, int tid) { }
+
+   //    POST todos
+   public Todo create(HttpServletRequest req, HttpServletResponse res, Todo todo) { }
+
+   //    PUT todos/{tid}
+   public Todo update(HttpServletRequest req, HttpServletResponse res, int tid,Todo todo) { }
+
+   //    DELETE todos/{tid}
+   public void destroy(HttpServletRequest req, HttpServletResponse res, int tid) { }
+   ```
+
+   _Your service methods need to verify a Todo belongs to the User with the given username before allowing any retrieval or CRUD operation_.
+
+1. In your `TodoController`, autowire your `TodoService`.
+
+   For now, in `TodoController`, hardcode a username field with a user you have in your sql database.
+
+   ```java
+   private String username = "shaun";
+   ```
+
+1. Implement the following REST endpoints:
+
+   | Method | Route              | Body | Operation |
+   |--------|--------------------|------|-----------|
+   | GET    | `/api/todos`       |      | List      |
+   | GET    | `/api/todos/{tid}` |      | Retrieve  |
+   | POST   | `/api/todos`       | Todo | Create    |
+   | PUT    | `/api/todos/{tid}` | Todo | Replace   |
+   | DELETE | `/api/todos/{tid}` |      | Destroy   |
+
+1. Test your routes using Postman to ensure you are getting back the appropriate data.
+
+### Angular
+
+#### Part 1 : Load Data
+
+1. In `todo.service.ts` remove the hardcoded todos array (we won't need it any more).
+
+   * Remove the `generateId` function and any calls to it, as the database will generate these for us now.
+
+1. Include `HttpClientModule` in your `app.module.ts` class.
+
+1. Inject the `HttpClient` into your _TodoService_ constructor.
+
+1. Modify the _TodoService_ `index` method to make a request to the API's index route. For example `http://localhost:8080/api/todos`.
+
+1. In `todo-list.component.ts` create a function named `reload` which uses the `todoService.index()` method to set the property `todos` to the response data  in the `.subscribe` (e.g. the list of todos).
+
+   * Invoke the `reload()` function in the `ngOnInit` function (when the component loads, this will populate the `todos` array).
+
+1. Refresh the browser, and you should see the todos in your database load.
+
+#### Part 2 : Create
+
+1. In `todo.service.ts` make a `create(todo)` method which uses `http`.
+
+   * You should still set the `completed` property to `false`.
+
+   * In `todo-list.component.ts` modify your `addTodo` behavior to use the `todoService.create(todo)` method. Be sure to call your `reload` function after the data if the request is successful.
+
+#### Part 3 : Destroy
+
+1. In `todo.service.js` make a `destroy(id)` method which uses `http`.
+
+   * In `todo-list.component.ts` modify your `deleteTodo` behavior to use the `todoService.destroy(id)` method. Again, be sure to `reload` the data on success.
+
+#### Part 4 : Update
+
+1. In `todo.service.js` make an `update(todo)` method which uses `http`.
+
+   * In `todo-list.component.js` modify your `updateTodo` behavior to use the `todoService.update(todo)` method. As before, use `reload` to update the data on success.
+
+#### Part 5 : Mark Todos Complete with Checkbox
+In this step, we will attach an event listener to the checkbox on the todo list. When the box is checked or unchecked, we will perform an update request and persist it.
+
+1. In `todo-list.component.html` assign a `(change)` event to the checkbox, and assign the `updateTodo(todo)` callback to it.
+
+   * When Angular detects the state of the input has changed it will invoke our update function, persisting the result to our database.
+
+
+
+<hr>
+
+[Prev](pokemon.md) | [Up](README.md)
+
