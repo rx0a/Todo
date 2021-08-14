@@ -1,27 +1,32 @@
-# NgTodo
+# Todo App
+This is an over-engineered todo application with its backend running in a Tomcat Server with Java Spring Framework, the frontend is using Angular Framework. In addition to being very dynamic and fast; it allows for multiple users working on their todo lists simultaneously. User authentication is done through Spring Security.
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.0.
+## Technologies Used
 
-## Development server
+* [Angular](https://angular.io/)</br>
+* [Java](https://en.wikipedia.org/wiki/Java_)</br>
+* [Javascript](https://www.javascript.com/)</br>
+* [Object-Oriented design](https://stackabuse.com/object-oriented-design-principles-in-java)</br>
+* [REST API](https://en.wikipedia.org/wiki/Representational_state_transfer)<br>
+* [Spring Framework](https://en.wikipedia.org/wiki/Spring_Framework#Spring_Boot)<br>
+* [MySQL](https://www.mysql.com/)</br>
+* [Git](https://git-scm.com/)</br>
+* [Eclipse](https://www.eclipse.org/ide/)</br>
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## REST Endpoints
 
-## Code scaffolding
+| Return Type   | Route                           | Functionality              |
+|:--------------|:--------------------------------|----------------------------|
+|`List<Todo>`   | `GET api/todos`                 | Retrieves all todos        |
+|`List<Todo>`   | `GET api/todos/{id}`            | Retrieves todos by id      |
+|`Todo`         | `POST api/todos`                | Creates a new todo         |
+|`Todo`         | `PUT api/todos{id}`             | Updates a todo             |
+|`void`         | `DELETE api/todos/{id}`         | Deletes a todo             |
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## How to run
+Demo Site Coming Soon.
 
-## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## How to build
+Run the backend with Spring boot on a Java compatible server. <br>
+Then run the frontend from the ngTodo directory with Angular CLI.
